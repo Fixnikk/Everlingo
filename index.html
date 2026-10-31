@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>JSON-Лингво</title>
+<style>
+:root{--bg:#fff;--card:#f7f7f7;--tx:#3c3c3c;--mut:#777;--pri:#58cc02;--priD:#46a302;--err:#ea2b2b;--errBg:#ffdfe0;--okBg:#d7ffb8;--bd:#e5e5e5;--blue:#1cb0f6;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#131f24;--card:#1f2b31;--tx:#eee;--mut:#9aa;--bd:#37464f;--errBg:#4a2326;--okBg:#223d1a;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#131f24;--card:#1f2b31;--tx:#eee;--mut:#9aa;--bd:#37464f;--errBg:#4a2326;--okBg:#223d1a;color-scheme:dark}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tx);font:16px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+.wrap{max-width:640px;margin:0 auto;padding:16px 16px 110px}
+h1{font-size:24px;margin:8px 0 4px}h2{font-size:18px;margin:22px 0 8px}
+.mut{color:var(--mut)}
+.stats{display:flex;gap:10px;margin:12px 0}
+.stat{flex:1;background:var(--card);border:2px solid var(--bd);border-radius:14px;padding:10px;text-align:center;font-weight:700}
+.stat small{display:block;color:var(--mut);font-weight:400}
+.btn{border:0;border-bottom:4px solid var(--priD);background:var(--pri);color:#fff;font:700 15px inherit;font-family:inherit;text-transform:uppercase;letter-spacing:.5px;padding:13px 18px;border-radius:14px;cursor:pointer;width:100%}
+.btn:disabled{background:var(--bd);border-color:var(--bd);color:var(--mut);cursor:default}
+.btn.sec{background:var(--bg);color:var(--blue);border:2px solid var(--bd);border-bottom-width:4px}
+.btn.sm{width:auto;padding:8px 12px;font-size:13px}
+.lesson{display:flex;align-items:center;gap:12px;background:var(--card);border:2px solid var(--bd);border-radius:16px;padding:12px 14px;margin:8px 0}
+.lesson .t{flex:1}.bar{height:6px;background:var(--bd);border-radius:6px;overflow:hidden;margin-top:6px}
+.bar i{display:block;height:100%;background:var(--pri);width:0;transition:width .3s}
+.row{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+textarea,input[type=text]{width:100%;font:inherit;background:var(--card);color:var(--tx);border:2px solid var(--bd);border-radius:12px;padding:12px}
+textarea{min-height:140px;font-family:ui-monospace,Menlo,monospace;font-size:13px}
+pre{background:var(--card);border:2px solid var(--bd);border-radius:12px;padding:12px;overflow-x:auto;font-size:12.5px}
+code{background:var(--card);padding:1px 5px;border-radius:5px}
+.tbl{overflow-x:auto}table{border-collapse:collapse;font-size:14px}td,th{border:1px solid var(--bd);padding:6px 8px;text-align:left;vertical-align:top}
+.top{display:flex;align-items:center;gap:12px;margin-bottom:22px}
+.x{background:none;border:0;color:var(--mut);font-size:26px;cursor:pointer}
+.top .bar{flex:1;height:14px}
+.q{font-size:21px;font-weight:700;margin:0 0 18px}
+.opt{display:block;width:100%;text-align:left;background:var(--bg);color:var(--tx);border:2px solid var(--bd);border-bottom-width:4px;border-radius:14px;padding:13px 14px;margin:9px 0;font:inherit;cursor:pointer}
+.opt:disabled{color:var(--tx)}
+.opt.sel{border-color:var(--blue);background:color-mix(in srgb,var(--blue) 14%,var(--bg))}
+.opt.done{opacity:.35;pointer-events:none}.opt.bad{border-color:var(--err);background:var(--errBg)}
+.chips{display:flex;gap:8px;flex-wrap:wrap;min-height:54px;padding:8px 0}
+.slot{border-top:2px solid var(--bd);border-bottom:2px solid var(--bd);margin:6px 0 14px}
+.cols{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.foot{position:fixed;left:0;right:0;bottom:0;padding:14px 16px calc(14px + env(safe-area-inset-bottom,0px));border-top:2px solid var(--bd);background:var(--bg)}
+.foot.ok{background:var(--okBg)}.foot.no{background:var(--errBg)}
+.foot .in{max-width:640px;margin:0 auto}.foot b{display:block;margin-bottom:8px}
+.foot.no .btn{background:var(--err);border-color:#a11}
+.ex{border-left:4px solid var(--pri);padding:6px 12px;margin:10px 0;background:var(--card);border-radius:8px}.note{background:var(--card);border:2px solid var(--blue);border-radius:12px;padding:10px 12px;margin:10px 0}
+.lesson.ok{border-color:var(--pri);background:var(--okBg)}
+.center{text-align:center;padding-top:50px}.big{font-size:64px}
+</style>
+</head>
+<body>
+<div class="wrap" id="app"></div>
+<div class="foot" id="foot" hidden></div>
+<script>
+const $=s=>document.querySelector(s),DAY=864e5,mem={};
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const ls=(k,v)=>{try{if(v===undefined)return localStorage.getItem(k);localStorage.setItem(k,v)}catch(e){if(v===undefined)return mem[k]||null;mem[k]=v}};
+const shuffle=a=>{a=[...a];for(let i=a.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[a[i],a[j]]=[a[j],a[i]]}return a};
+const norm=s=>String(s).toLowerCase().replace(/ё/g,'е').replace(/[’‘`]/g,"'").replace(/[.,!?¿¡;:"«»“”]/g,'').replace(/\s+/g,' ').trim();
+const eq=(a,b)=>{const x=norm(a),y=norm(b);return x||y?x==y:String(a).trim()==String(b).trim()};
+const offset=()=>+ls('dl:off')||0, now=()=>Date.now()+offset()*DAY;
+const today=()=>new Date(now()).toISOString().slice(0,10);
+
+const SAMPLE={title:"Шведский: первые шаги",description:"Пример курса — замените своим JSON",srs:{intervals:[1,3,7,14,30],failDays:2},settings:{dailyGoal:30,sessionSize:12},
+lessons:[
+{id:"hello",title:"Приветствия",theory:{title:"Приветствия",blocks:["**Hej** — универсальное «привет», а **Tack** — «спасибо».",{type:"table",header:true,rows:[["Швед.","Рус."],["Hej","Привет"],["Tack","Спасибо"]]},{type:"list",items:["**Ja** — да","**Nej** — нет"]},{type:"example",text:"Jag heter Anna",translation:"Меня зовут Анна"},{type:"note",text:"Hej читается как «хей»."}]},exercises:[
+{id:"h1",type:"choice",question:"Как по-шведски «Привет»?",options:["Hej","Tack","Ja","Nej"],answer:"Hej"},
+{id:"h2",type:"choice",question:"Что значит «Tack»?",options:["Пожалуйста","Спасибо","Извините"],answer:1,explanation:"Tack = спасибо"},
+{id:"h3",type:"input",question:"Переведите: «да»",answer:["ja"],hint:"две буквы"},
+{id:"h4",type:"order",question:"Соберите: «Меня зовут Анна»",answer:"Jag heter Anna",extra:["är"]},
+{id:"h5",type:"match",question:"Соедините пары",pairs:[["Hej","Привет"],["Tack","Спасибо"],["Ja","Да"],["Nej","Нет"]]}]},
+{id:"food",title:"Еда",srs:{intervals:[2,5,10],failDays:1},exercises:[
+{id:"f1",type:"input",question:"Переведите: «вода»",answer:"vatten"},
+{id:"f2",type:"choice",question:"Что такое «Kaffe»?",options:["Чай","Кофе","Молоко"],answer:"Кофе"},
+{id:"f3",type:"order",question:"Соберите: «Я хочу кофе»",answer:"Jag vill ha kaffe",extra:["te"]},
+{id:"f4",type:"match",question:"Соедините пары",pairs:[["bröd","хлеб"],["mjölk","молоко"],["äpple","яблоко"]]}]}]};
+
+let TH=null,C=null,P={},ST={xp:0,streak:0,last:''},S=null,view='home';
+const key=()=>'dl:p:'+C.title;
+const cfg=()=>Object.assign({retryWrong:true,shuffle:true,sessionSize:0,unlock:'none',dailyGoal:0,xp:10,mastery:3},C.settings||{});
+const srsOf=e=>{const l=C.lessons.find(x=>x.id==e._l);const s=e.srs!==undefined?e.srs:l&&l.srs!==undefined?l.srs:C.srs;
+ if(!s)return null;return{intervals:s.intervals||[1,3,7,14,30],failDays:s.failDays??2}};
+
+const TT=['text','list','table','example','note'];
+const tb=t=>typeof t=='string'?[t]:Array.isArray(t)?t:t&&Array.isArray(t.blocks)?t.blocks:null;
+function checkTheory(t,i){const b=tb(t);if(!b)throw Error(`Урок ${i+1}: theory — строка, массив блоков или {title, blocks}`);
+ b.forEach((x,k)=>{if(typeof x=='string')return;const w=`Урок ${i+1}, блок теории ${k+1}: `;
+  if(!x||!TT.includes(x.type||'text'))throw Error(w+'неизвестный type');
+  if(x.type=='list'&&!Array.isArray(x.items))throw Error(w+'нужен items[]');
+  if(x.type=='table'&&!(Array.isArray(x.rows)&&x.rows.every(Array.isArray)))throw Error(w+'нужен rows — массив строк-массивов');
+  if(['text','example','note'].includes(x.type||'text')&&x.text===undefined)throw Error(w+'нужен text')})}
+function checkSrs(s,w){if(s===undefined||s===null||typeof s=='boolean')return;if(typeof s!='object'||Array.isArray(s))throw Error(w+'srs — объект, true или false');
+ if(s.intervals!==undefined&&!(Array.isArray(s.intervals)&&s.intervals.length&&s.intervals.every(x=>typeof x=='number'&&x>=0)))throw Error(w+'srs.intervals — непустой массив чисел (дни)');
+ if(s.failDays!==undefined&&!(typeof s.failDays=='number'&&s.failDays>=0))throw Error(w+'srs.failDays — число ≥ 0')}
+function checkSettings(s){if(s===undefined)return;if(!s||typeof s!='object'||Array.isArray(s))throw Error('settings — должен быть объектом');
+ for(const k of ['sessionSize','dailyGoal','xp','mastery'])if(s[k]!==undefined&&!(typeof s[k]=='number'&&s[k]>=0))throw Error(`settings.${k} — число ≥ 0`);
+ for(const k of ['retryWrong','shuffle'])if(s[k]!==undefined&&typeof s[k]!='boolean')throw Error(`settings.${k} — true или false`);
+ if(s.unlock!==undefined&&!['none','sequential'].includes(s.unlock))throw Error('settings.unlock — «none» или «sequential»')}
+function validate(c){
+ if(!c||!Array.isArray(c.lessons)||!c.lessons.length)throw Error('Нужен непустой массив lessons');
+ checkSrs(c.srs,'Курс: ');checkSettings(c.settings);
+ c.lessons.forEach((l,i)=>{l.id=String(l.id??'L'+(i+1));l.title=l.title||'Урок '+(i+1);checkSrs(l.srs,`Урок ${i+1}: `);if(l.theory!==undefined)checkTheory(l.theory,i);
+  if(!Array.isArray(l.exercises)||!l.exercises.length)throw Error(`В уроке ${i+1} нужен непустой массив exercises`);
+  l.exercises.forEach((e,j)=>{const w=`Урок ${i+1}, задание ${j+1}: `;
+   if(!['choice','input','order','match'].includes(e.type))throw Error(w+'неизвестный type «'+e.type+'»');
+   e.id=String(e.id??l.id+'-'+(j+1));e._l=l.id;checkSrs(e.srs,w);
+   if(e.type=='choice'&&(!Array.isArray(e.options)||e.answer===undefined))throw Error(w+'нужны options и answer');
+   if(e.type=='input'&&e.answer===undefined)throw Error(w+'нужен answer');
+   if(e.type=='order'&&e.answer===undefined)throw Error(w+'нужен answer');
+   if(e.type=='match'&&(!Array.isArray(e.pairs)||e.pairs.length<2))throw Error(w+'нужен pairs (минимум 2 пары)');
+   if(e.type=='choice'&&!(typeof e.answer=='number'?e.options[e.answer]!==undefined:e.options.some(o=>String(o).trim()==String(e.answer).trim())))throw Error(w+'answer не совпадает ни с одним из options');
+   if(e.type=='order'&&e.words){const pool=[...e.words].map(String);for(const x of String(Array.isArray(e.answer)?e.answer.join(' '):e.answer).split(/\s+/).filter(Boolean)){const k=pool.indexOf(x);if(k<0)throw Error(w+'в words нет слова «'+x+'»');pool.splice(k,1)}}
+  })});
+ c.title=c.title||'Курс';return c}
+
+function setCourse(c){C=validate(c);S=null;P=JSON.parse(ls(key())||'{}');ST=JSON.parse(ls('dl:st')||'{"xp":0,"streak":0,"last":""}');ls('dl:last',JSON.stringify(c));view='home';render()}
+function save(){ls(key(),JSON.stringify(P));ls('dl:st',JSON.stringify(ST))}
+const all=()=>C.lessons.flatMap(l=>l.exercises);
+const isDue=e=>srsOf(e)&&P[e.id]&&P[e.id].due<=now(), isNew=e=>!P[e.id];
+
+function touchDay(){const t=today();if(ST.last!=t){const y=new Date(now()-DAY).toISOString().slice(0,10);ST.streak=ST.last==y?ST.streak+1:1;ST.last=t}}
+function record(e,ok){
+ touchDay();const p=P[e.id]||{box:0},r=srsOf(e);
+ if(ok){p.box++;const x=cfg().xp;ST.xp+=x;if(ST.day!=today()){ST.day=today();ST.dx=0}ST.dx=(ST.dx||0)+x;
+  if(r)p.due=now()+r.intervals[Math.min(p.box-1,r.intervals.length-1)]*DAY;else delete p.due}
+ else{p.box=0;if(r)p.due=now()+r.failDays*DAY;else delete p.due}
+ P[e.id]=p}
+
+/* ---------- views ---------- */
+function render(){
+ $('#foot').hidden=true;const a=$('#app');
+ if(view=='docs')return docs(a);
+ if(view=='theory')return theoryView(a);
+ if(view=='load')return loadView(a);
+ if(S)return exView(a);
+ const g=cfg(),m=Math.max(1,g.mastery),hasSrs=all().some(srsOf),due=hasSrs?all().filter(isDue):[],dx=ST.day==today()?ST.dx||0:0;
+ const fin=l=>l.exercises.every(e=>P[e.id]);
+ a.innerHTML=`<h1>${esc(C.title)}</h1><div class="mut">${esc(C.description||'')}</div>
+ <div class="stats"><div class="stat">🔥 ${ST.streak}<small>дней подряд</small></div><div class="stat">⭐ ${ST.xp}<small>XP</small></div>${hasSrs?`<div class="stat">🔁 ${due.length}<small>к повтору</small></div>`:`<div class="stat">✅ ${all().filter(e=>P[e.id]?.box>=m).length}<small>выучено</small></div>`}</div>
+ ${g.dailyGoal?`<div class="mut" style="font-size:13px">Цель дня: ${Math.min(dx,g.dailyGoal)}/${g.dailyGoal} XP${dx>=g.dailyGoal?' 🎯':''}</div><div class="bar" style="margin-bottom:12px"><i style="width:${Math.min(100,dx/g.dailyGoal*100)}%"></i></div>`:''}
+ ${hasSrs?`<button class="btn" id="rev" ${due.length?'':'disabled'}>Повторить (${due.length})</button>`:''}
+ ${C.lessons.every(fin)?'<div class="note">🎉 Курс пройден! Закрепляйте материал повторениями.</div>':''}
+ <h2>Уроки</h2>
+ ${C.lessons.map((l,li)=>{const n=l.exercises.length,mm=l.exercises.filter(e=>P[e.id]?.box>=m).length,sn=l.exercises.filter(e=>P[e.id]).length,lock=g.unlock=='sequential'&&li>0&&!fin(C.lessons[li-1]),dn=sn==n,mas=mm==n;
+ return `<div class="lesson${dn?' ok':''}" style="${lock?'opacity:.6':''}"><div class="t"><b>${lock?'🔒 ':mas?'🏅 ':dn?'✅ ':''}${esc(l.title)}</b><div class="mut" style="font-size:13px">${lock?'Сначала пройдите предыдущий урок':dn?`Пройден · выучено ${mm}/${n}`:`${sn}/${n} пройдено · выучено ${mm}`}</div><div class="bar"><i style="width:${mm/n*100}%"></i></div></div>${lock?'<button class="btn sm" disabled>Закрыто</button>':`${l.theory?`<button class="btn sec sm" data-t="${esc(l.id)}">Теория</button>`:''}<button class="btn sm${dn?' sec':''}" data-l="${esc(l.id)}">${dn?'Ещё раз':sn?'Продолжить':'Старт'}</button>`}</div>`}).join('')}
+ <div class="row"><button class="btn sec sm" id="ld">Загрузить JSON</button><button class="btn sec sm" id="dc">Инструкция</button><button class="btn sec sm" id="rs">Сбросить прогресс курса</button>${hasSrs?'<button class="btn sec sm" id="sim">+1 день (тест)</button>':''}</div>
+ ${hasSrs?`<p class="mut" style="font-size:13px">Сдвиг времени: +${offset()} дн. Нужен, чтобы проверить интервальные повторы.</p>`:''}`;
+ const rv=$('#rev');if(rv)rv.onclick=()=>start(due.slice(0,15));
+ a.querySelectorAll('[data-l]').forEach(b=>b.onclick=()=>{const l=C.lessons.find(x=>x.id==b.dataset.l);
+  if(l.theory&&l.exercises.some(isNew)){TH={id:l.id,go:true};view='theory';return render()}
+  startLesson(l)});
+ a.querySelectorAll('[data-t]').forEach(b=>b.onclick=()=>{TH={id:b.dataset.t,go:false};view='theory';render()});
+ $('#ld').onclick=()=>{view='load';render()};$('#dc').onclick=()=>{view='docs';render()};
+ $('#rs').onclick=function(){if(this.dataset.s){P={};save();render()}else{this.dataset.s='1';this.textContent='Точно сбросить?';setTimeout(()=>{this.dataset.s='';this.textContent='Сбросить прогресс курса'},3500)}};
+ const sm=$('#sim');if(sm)sm.onclick=()=>{ls('dl:off',offset()+1);render()}}
+
+function loadView(a){
+ a.innerHTML=`<h1>Загрузка курса</h1><p class="mut">Выберите файл .json или вставьте текст. Прогресс хранится отдельно для каждого курса (по полю title).</p>
+ <input type="file" id="f" accept=".json,application/json" multiple><p id="cnt" class="mut"></p><textarea id="t" placeholder='{"title":"…","lessons":[…]}'></textarea>
+ <p id="err" style="color:var(--err)"></p>
+ <h2>Резервная копия прогресса</h2><p class="mut">Прогресс хранится только в этом браузере. Скопируйте текст, чтобы перенести его на другое устройство, и вставьте сюда же для восстановления (для того же курса).</p><textarea id="pr" style="min-height:80px"></textarea><div class="row"><button class="btn sec sm" id="bkp">Показать и скопировать</button><button class="btn sec sm" id="rst">Восстановить</button></div><p id="pm" class="mut"></p>
+ <div class="row"><button class="btn sm" id="go">Заменить курс</button><button class="btn sm" id="ad">Добавить к текущему</button><button class="btn sec sm" id="ex">Вставить пример</button><button class="btn sec sm" id="bk">Назад</button></div>`;
+ let pend=[];
+ const lessonsOf=o=>Array.isArray(o)?o:o&&o.lessons?o.lessons:o&&o.exercises?[o]:Error('Файл должен быть курсом (lessons), уроком (exercises) или массивом уроков');
+ const go=add=>{try{
+  const txts=pend.length?pend:[$('#t').value],objs=txts.map((t,i)=>{try{return JSON.parse(t)}catch(e){throw Error((pend.length?'файл '+(i+1)+': ':'')+e.message)}});
+  const ls_=objs.flatMap(o=>{const r=lessonsOf(o);if(r instanceof Error)throw r;return r});
+  if(add){const c=JSON.parse(JSON.stringify(C));ls_.forEach(l=>{const i=c.lessons.findIndex(x=>x.id==String(l.id));i>=0?c.lessons[i]=l:c.lessons.push(l)});setCourse(c)}
+  else{const b=objs.find(o=>o&&!Array.isArray(o)&&o.title&&o.lessons)||{title:'Курс'};setCourse({...b,lessons:ls_})}
+ }catch(e){$('#err').textContent='Ошибка: '+e.message}};
+ $('#f').onchange=e=>{const fs=[...e.target.files];Promise.all(fs.map(f=>f.text())).then(t=>{pend=t;$('#cnt').textContent='Выбрано файлов: '+t.length})};
+ $('#bkp').onclick=async()=>{const t=JSON.stringify({course:C.title,P,ST});$('#pr').value=t;let ok=false;try{await navigator.clipboard.writeText(t);ok=true}catch(e){}$('#pm').textContent=ok?'Скопировано ✓':'Скопируйте текст вручную'};
+ $('#rst').onclick=()=>{try{const o=JSON.parse($('#pr').value);if(!o||typeof o.P!='object')throw 0;P=o.P;if(o.ST)ST=o.ST;save();$('#pm').textContent='Восстановлено ✓'}catch(e){$('#pm').textContent='Не удалось: неверный текст копии'}};
+ $('#go').onclick=()=>go(false);$('#ad').onclick=()=>go(true);$('#ex').onclick=()=>$('#t').value=JSON.stringify(SAMPLE,null,2);
+ $('#bk').onclick=()=>{view='home';render()}}
+
+const md=s=>esc(s).replace(/\*\*(.+?)\*\*/g,'<b>$1</b>').replace(/\n/g,'<br>');
+function block(b){if(typeof b=='string')b={type:'text',text:b};
+ if(b.type=='list')return `<ul>${b.items.map(i=>`<li>${md(i)}</li>`).join('')}</ul>`;
+ if(b.type=='table')return `<div class="tbl"><table>${b.rows.map((r,i)=>`<tr>${r.map(c=>i==0&&b.header?`<th>${md(c)}</th>`:`<td>${md(c)}</td>`).join('')}</tr>`).join('')}</table></div>`;
+ if(b.type=='example')return `<div class="ex"><b>${md(b.text)}</b>${b.translation?`<div class="mut">${md(b.translation)}</div>`:''}</div>`;
+ if(b.type=='note')return `<div class="note">💡 ${md(b.text)}</div>`;
+ return `<p>${md(b.text||'')}</p>`}
+function startLesson(l){const ex=l.exercises,pick=ex.filter(e=>isNew(e)||isDue(e));start(pick.length?pick:ex)}
+function theoryView(a){
+ const l=C.lessons.find(x=>x.id==TH.id),t=l.theory;
+ a.innerHTML=`<div class="top"><button class="x" id="bk" aria-label="Закрыть">×</button><h1 style="margin:0;font-size:20px">${esc((t&&t.title)||l.title)}</h1></div>${tb(t).map(block).join('')}`;
+ footBar(`<button class="btn" id="go">${TH.go?'Начать урок':'Закрыть'}</button>`);
+ $('#bk').onclick=()=>{view='home';footBar('');render()};
+ $('#go').onclick=()=>{view='home';if(TH.go)startLesson(l);else{footBar('');render()}}}
+
+const THEORY_EX={theory:{title:"Заголовок (необязательно)",blocks:["Обычный абзац с **жирным** словом.",{type:"list",items:["пункт 1","пункт 2"]},{type:"table",header:true,rows:[["Слово","Перевод"],["Hej","Привет"]]},{type:"example",text:"Jag heter Anna",translation:"Меня зовут Анна"},{type:"note",text:"Важное замечание"}]}};
+const PROMPT='Составь JSON-курс для платформы по формату: {title, description, srs (необязательно), settings (необязательно), lessons:[{id,title,theory,exercises}]}. Типы заданий: choice (question, options, answer), input (question, answer — строка или массив), order (question, answer, extra), match (question, pairs). У каждого задания уникальный id. Тема: … Уровень: … Сделай 3 урока по 8 заданий, в начале каждого — короткая теория. Верни только JSON.';
+function docs(a){
+ a.innerHTML=`<h1>Инструкция</h1><div class="row" style="margin:0 0 6px"><button class="btn sec sm" id="bk">← Назад</button><button class="btn sm" id="cp">Скопировать всю инструкцию</button></div><div id="man">
+ <h2>1. Быстрый старт</h2><ol><li>Нажмите <b>«Загрузить JSON»</b> и выберите файл (или вставьте текст). Без этого открыт демо-курс.</li><li>На главной нажмите <b>«Старт»</b> у урока. Если у урока есть теория, она покажется перед первым занятием; позже её можно открыть кнопкой <b>«Теория»</b>.</li><li>Отвечайте на задания. Верно — +10 XP. Ошибка — задание вернётся в конец этого же занятия.</li><li>Приходите каждый день: кнопка <b>«Повторить»</b> (если в курсе включены повторы) собирает задания, у которых подошёл срок.</li></ol>
+ <h2>2. Типы заданий в занятии</h2><div class="tbl"><table>
+ <tr><td><b>choice</b></td><td>выберите вариант и нажмите «Проверить»</td></tr>
+ <tr><td><b>input</b></td><td>введите ответ, Enter — проверить. Регистр и знаки .,!? не важны, буквы с диакритикой (ö, ä) — важны</td></tr>
+ <tr><td><b>order</b></td><td>нажимайте слова в нужном порядке; нажатие на слово в ответе возвращает его назад. Среди слов могут быть лишние</td></tr>
+ <tr><td><b>match</b></td><td>нажмите слово слева, затем его пару справа. Проверка автоматическая; любая ошибка засчитывается как неверный ответ</td></tr></table></div>
+ <p>Значок × вверху прерывает занятие: уже отвеченные задания сохраняются. Клавиша Enter работает как «Проверить» и «Дальше».</p>
+ <p>Урок помечается ✅ «Пройден», когда в нём отвечены все задания, и 🏅, когда все они выучены (см. <code>mastery</code>). Когда пройдены все уроки, на главной появляется поздравление. Кнопка «Старт» у начатого урока превращается в «Продолжить», у пройденного — в «Ещё раз».</p>
+ <h2>3. Интервальные повторения (по желанию)</h2>
+ <p><b>Если блока <code>srs</code> нет — повторов нет:</b> кнопка «Повторить» не показывается, а ошибка лишь возвращает задание в конец текущего занятия (если не отключено <code>retryWrong</code>).</p>
+ <p>Чтобы включить, добавьте <code>"srs": {}</code> (значения по умолчанию) или задайте свои:</p><pre id="p4"></pre>
+ <p><code>intervals</code> — через сколько дней повторять после 1-го, 2-го, 3-го… верного ответа подряд (последнее значение повторяется). <code>failDays</code> — через сколько дней повторить после ошибки (0 — уже в следующем занятии). Ошибка сбрасывает цепочку.</p>
+ <p><b>Приоритет:</b> <code>srs</code> задания → <code>srs</code> урока → <code>srs</code> курса. <code>"srs": false</code> на уровне урока или задания отключает повторы именно там, <code>true</code> включает со значениями по умолчанию. Кнопка «+1 день (тест)» на главной сдвигает время для проверки.</p>
+ <h2>4. Загрузка</h2><p>Можно выбрать несколько файлов сразу. Файл — это курс (<code>lessons[]</code>), один урок (объект с <code>exercises</code>) или массив уроков. «Заменить курс» собирает новый курс, «Добавить к текущему» дописывает уроки; урок с тем же <code>id</code> заменяется, прогресс остаётся.</p>
+ <h2>5. Формат JSON</h2><div class="tbl"><table>
+ <tr><th>Поле</th><th>Описание</th></tr>
+ <tr><td><code>title</code></td><td>название курса (по нему хранится прогресс)</td></tr>
+ <tr><td><code>description</code></td><td>необязательно</td></tr>
+ <tr><td><code>srs</code></td><td>необязательно; без него повторов нет. <code>intervals</code> (по умолчанию <code>[1,3,7,14,30]</code>), <code>failDays</code> (по умолчанию 2)</td></tr><tr><td><code>settings</code></td><td>необязательно, см. ниже</td></tr>
+ <tr><td><code>lessons[]</code></td><td><code>id</code>, <code>title</code>, <code>theory</code>, <code>srs</code> (необязательно), <code>exercises[]</code></td></tr></table></div>
+ <h3>Настройки курса (<code>settings</code>)</h3><div class="tbl"><table>
+ <tr><th>Поле</th><th>По умолч.</th><th>Что делает</th></tr>
+ <tr><td><code>retryWrong</code></td><td>true</td><td>ошибочное задание спрашивается ещё раз в конце занятия; false — не переспрашивать</td></tr>
+ <tr><td><code>shuffle</code></td><td>true</td><td>перемешивать задания; false — в порядке файла</td></tr>
+ <tr><td><code>sessionSize</code></td><td>0</td><td>максимум заданий за занятие (0 — без лимита)</td></tr>
+ <tr><td><code>unlock</code></td><td>"none"</td><td>"sequential" — урок открывается, когда в предыдущем отвечены все задания</td></tr>
+ <tr><td><code>dailyGoal</code></td><td>0</td><td>цель в XP на день; на главной появится полоска (0 — выключено)</td></tr>
+ <tr><td><code>xp</code></td><td>10</td><td>XP за верный ответ с первой попытки</td></tr>
+ <tr><td><code>mastery</code></td><td>3</td><td>сколько верных ответов подряд нужно, чтобы задание считалось «выученным»</td></tr></table></div><pre id="p5"></pre>
+ <h3>Задания</h3><div class="tbl"><table>
+ <tr><th>type</th><th>Поля</th></tr>
+ <tr><td><code>choice</code></td><td><code>question</code>, <code>options[]</code>, <code>answer</code> — текст варианта или номер с 0</td></tr>
+ <tr><td><code>input</code></td><td><code>question</code>, <code>answer</code> — строка или массив допустимых, <code>hint</code></td></tr>
+ <tr><td><code>order</code></td><td><code>question</code>, <code>answer</code> — верное предложение, <code>extra[]</code> — лишние слова, <code>words[]</code> — свой набор слов</td></tr>
+ <tr><td><code>match</code></td><td><code>question</code>, <code>pairs</code> — <code>[["слово","перевод"],…]</code>, минимум 2</td></tr></table></div>
+ <p>У любого задания: <code>id</code> (уникальный, по нему хранится прогресс — не меняйте его при правках), <code>explanation</code> (покажется после ответа) и <code>srs</code> (свои правила повторов для этого задания).</p>
+ <h3>Теория урока (<code>theory</code>)</h3>
+ <p>Показывается перед первым занятием урока. Это строка, массив блоков или объект <code>{title, blocks}</code>. Блок — строка (абзац) или объект:</p><div class="tbl"><table>
+ <tr><td><code>text</code></td><td><code>text</code> — абзац</td></tr>
+ <tr><td><code>list</code></td><td><code>items[]</code> — маркированный список</td></tr>
+ <tr><td><code>table</code></td><td><code>rows</code> — массив строк, <code>header:true</code> — первая строка заголовок</td></tr>
+ <tr><td><code>example</code></td><td><code>text</code>, <code>translation</code> — пример с переводом</td></tr>
+ <tr><td><code>note</code></td><td><code>text</code> — выделенная заметка</td></tr></table></div>
+ <p>В тексте работают <code>**жирный**</code> и перенос строки <code>\\n</code>.</p><pre id="p1"></pre>
+ <h3>Полный пример курса</h3><pre id="p2"></pre>
+ <h2>6. Подсказка для нейросети</h2><p class="mut">Скопируйте и подставьте тему:</p><pre id="p3" style="white-space:pre-wrap"></pre>
+ <h2>7. Частые проблемы</h2><ul><li><b>«Ошибка: …» при загрузке</b> — сообщение указывает урок и задание. Проверьте запятые и кавычки JSON.</li><li><b>Задание нельзя пройти</b> — для <code>choice</code> <code>answer</code> должен совпадать с одним из <code>options</code>.</li><li><b>Прогресс пропал</b> — он хранится в браузере на этом устройстве и не синхронизируется. Очистка данных браузера его удалит. Резервную копию прогресса можно сделать и восстановить на экране «Загрузить JSON»; «Сбросить прогресс курса» — на главной (нужно нажать дважды). Смена <code>title</code> создаёт новый курс с чистым прогрессом.</li><li><b>order не проходится</b> — если указан <code>words</code>, в нём должны быть все слова из <code>answer</code>.</li><li><b>Ошибка в settings или srs</b> — числа пишите числами, true/false без кавычек, <code>unlock</code> — «none» или «sequential».</li><li><b>Не работает копирование инструкции</b> — выделите текст вручную: браузер может запрещать доступ к буферу обмена.</li></ul></div>`;
+ $('#p1').textContent=JSON.stringify(THEORY_EX,null,2);$('#p2').textContent=JSON.stringify(SAMPLE,null,2);$('#p3').textContent=PROMPT;$('#p4').textContent=JSON.stringify({srs:{intervals:[1,3,7,14,30],failDays:2},lessons:[{id:'l1',srs:{intervals:[2,5],failDays:1},exercises:[{id:'a1',type:'input',question:'…',answer:'…',srs:false}]}]},null,2);$('#p5').textContent=JSON.stringify({settings:{retryWrong:true,shuffle:true,sessionSize:10,unlock:'sequential',dailyGoal:30,xp:10,mastery:3}},null,2);
+ $('#cp').onclick=async()=>{const t='Инструкция по платформе JSON-Лингво\n\n'+$('#man').innerText;let ok=false;
+  try{await navigator.clipboard.writeText(t);ok=true}catch(e){try{const x=document.createElement('textarea');x.value=t;x.style.cssText='position:fixed;opacity:0';document.body.append(x);x.select();ok=document.execCommand('copy');x.remove()}catch(e2){}}
+  const c=$('#cp');c.textContent=ok?'Скопировано ✓':'Не удалось скопировать';setTimeout(()=>c.textContent='Скопировать всю инструкцию',2200)};
+ $('#bk').onclick=()=>{view='home';render()}}
+
+/* ---------- session ---------- */
+function start(items){if(!items.length)return;const g=cfg();let q=g.shuffle?shuffle(items):[...items];if(g.sessionSize)q=q.slice(0,g.sessionSize);S={q,total:q.length,done:0,seen:new Set(),ok:0,gain:0};render()}
+function footBar(html,cls){const f=$('#foot');f.className='foot '+(cls||'');f.hidden=!html;f.innerHTML=html?`<div class="in">${html}</div>`:''}
+function exView(a){
+ if(!S.q.length)return finish(a);
+ const e=S.q[0],pct=S.done/S.total*100;
+ a.innerHTML=`<div class="top"><button class="x" id="cl" aria-label="Закрыть">×</button><div class="bar"><i style="width:${pct}%"></i></div></div><p class="q">${esc(e.question||'')}</p><div id="b"></div>`;
+ $('#cl').onclick=()=>{S=null;save();render()};
+ const B=$('#b');let locked=false,canCheck=false,getOk=()=>false,correct='';
+ function setCheck(on){if(locked)return;canCheck=on;let k=$('#ck');
+  if(!k||$('#foot').hidden){footBar('<button class="btn" id="ck">Проверить</button>');k=$('#ck');k.onclick=check}
+  k.disabled=!on}
+ function check(){if(locked||!canCheck)return;locked=true;B.querySelectorAll('button,input').forEach(x=>x.disabled=true);answered(getOk(),correct)}
+ if(e.type=='choice'){
+  const ans=typeof e.answer=='number'?e.options[e.answer]:e.answer;correct=ans;let sel=null;
+  shuffle(e.options).forEach(o=>{const b=document.createElement('button');b.className='opt';b.textContent=o;
+   b.onclick=()=>{if(locked)return;B.querySelectorAll('.opt').forEach(x=>x.classList.remove('sel'));b.classList.add('sel');sel=o;setCheck(true)};B.append(b)});
+  getOk=()=>sel!==null&&String(sel).trim()==String(ans).trim();setCheck(false)}
+ else if(e.type=='input'){
+  const acc=[].concat(e.answer).map(String);correct=acc[0];
+  B.innerHTML=`<input type="text" id="in" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Ваш ответ">${e.hint?`<p class="mut">Подсказка: ${esc(e.hint)}</p>`:''}`;
+  const i=$('#in');i.oninput=()=>setCheck(!!i.value.trim());i.onkeydown=ev=>{if(ev.key=='Enter')check()};setTimeout(()=>i.focus(),50);
+  getOk=()=>acc.some(x=>eq(x,i.value));setCheck(false)}
+ else if(e.type=='order'){
+  const sent=Array.isArray(e.answer)?e.answer.join(' '):String(e.answer);correct=sent;
+  const words=shuffle((e.words||[...sent.split(/\s+/).filter(Boolean),...(e.extra||[])]).map(String));let pick=[];
+  B.innerHTML='<div class="slot"><div class="chips" id="sl"></div></div><div class="chips" id="bk"></div>';
+  const chip=(i,fn,ghost)=>{const b=document.createElement('button');b.className='opt';b.style.cssText='width:auto;margin:0'+(ghost?';visibility:hidden':'');b.textContent=words[i];if(fn)b.onclick=()=>{if(!locked)fn()};return b};
+  const draw=()=>{const sl=$('#sl'),bk=$('#bk');sl.innerHTML=bk.innerHTML='';
+   pick.forEach(i=>sl.append(chip(i,()=>{pick=pick.filter(x=>x!=i);draw()})));
+   words.forEach((w,i)=>bk.append(pick.includes(i)?chip(i,null,true):chip(i,()=>{pick.push(i);draw()})));
+   setCheck(pick.length>0)};
+  getOk=()=>eq(pick.map(i=>words[i]).join(' '),sent);draw()}
+ else{
+  const L=shuffle(e.pairs.map((p,i)=>[p[0],i])),R=shuffle(e.pairs.map((p,i)=>[p[1],i]));let l=null,mis=0,left=e.pairs.length;
+  B.innerHTML='<div class="cols"><div id="L"></div><div id="R"></div></div>';
+  const mk=(arr,box,side)=>arr.forEach(([t,i])=>{const b=document.createElement('button');b.className='opt';b.textContent=t;b.dataset.i=i;
+   b.onclick=()=>{
+    if(locked)return;
+    if(side=='L'){B.querySelectorAll('#L .opt').forEach(x=>x.classList.remove('sel'));b.classList.add('sel');l=b;return}
+    if(!l)return;
+    const li=+l.dataset.i,ri=+b.dataset.i;
+    if(li==ri||String(e.pairs[li][1])==String(e.pairs[ri][1])){l.classList.remove('sel');l.classList.add('done');b.classList.add('done');l=null;if(!--left){locked=true;answered(mis==0,'')}}
+    else{mis++;b.classList.add('bad');setTimeout(()=>b.classList.remove('bad'),500)}};
+   $(box).append(b)});
+  mk(L,'#L','L');mk(R,'#R','R');footBar('')}}
+
+function answered(ok,correct){
+ const e=S.q[0];
+ if(!S.seen.has(e.id)){S.seen.add(e.id);const x0=ST.xp;record(e,ok);S.gain+=ST.xp-x0;if(ok)S.ok++;save()}
+ footBar(`<b>${ok?'Верно! 🎉':'Неверно'+(correct?'. Ответ: '+esc(correct):(cfg().retryWrong?'. Это задание вернётся позже':''))}</b>${e.explanation?`<div style="margin-bottom:8px">${esc(e.explanation)}</div>`:''}<button class="btn" id="nx">Дальше</button>`,ok?'ok':'no');
+ $('#nx').onclick=()=>{if(ok||!cfg().retryWrong){S.q.shift();S.done++}else S.q.push(S.q.shift());render()};
+ $('#nx').focus()}
+
+function finish(a){
+ save();
+ a.innerHTML=`<div class="center"><div class="big">🏆</div><h1>Занятие завершено!</h1><p>Верно с первого раза: ${S.ok} из ${S.total} (${Math.round(S.ok/S.total*100)}%) · +${S.gain} XP</p><p class="mut">${all().some(srsOf)?'Повторы запланированы по интервалам курса.':'Для этого курса повторения отключены.'}</p><button class="btn" id="ok">Продолжить</button></div>`;
+ $('#ok').onclick=()=>{S=null;render()}}
+
+document.addEventListener('keydown',ev=>{if(ev.key!='Enter'||!S)return;const t=ev.target;
+ if(!(t===document.body||t.classList.contains('sel')))return;
+ const k=$('#ck'),n=$('#nx');if(n&&!$('#foot').hidden){ev.preventDefault();n.click()}else if(k&&!k.disabled&&!$('#foot').hidden){ev.preventDefault();k.click()}});
+try{setCourse(JSON.parse(ls('dl:last')||'null')||SAMPLE)}catch(e){setCourse(SAMPLE)}
+</script>
+</body>
+</html>

@@ -1,0 +1,42 @@
+{
+  "name": "json-lingvo",
+  "version": "1.0.0",
+  "description": "JSON-Лингво — платформа для уроков из JSON",
+  "main": "main.js",
+  "author": "JSON-Lingvo",
+  "build": {
+    "appId": "app.jsonlingvo",
+    "productName": "JSON-Lingvo",
+    "files": [
+      "main.js",
+      "index.html"
+    ],
+    "directories": {
+      "output": "dist"
+    },
+    "win": {
+      "target": [
+        {
+          "target": "portable",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "signAndEditExecutable": false
+    },
+    "portable": {
+      "artifactName": "JSON-Lingvo-portable.exe"
+    }
+  },
+  "devDependencies": {
+    "electron": "^45.2.1",
+    "electron-builder": "^26.18.0"
+  },
+  "scripts": {
+    "prep": "node -e \"require('fs').copyFileSync('../index.html','index.html')\"",
+    "dist": "npm run prep && electron-builder --win portable --x64"
+  },
+  "license": "MIT",
+  "private": true
+}

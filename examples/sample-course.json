@@ -1,0 +1,190 @@
+{
+  "title": "Шведский: первые шаги",
+  "description": "Пример курса — замените своим JSON",
+  "srs": {
+    "intervals": [
+      1,
+      3,
+      7,
+      14,
+      30
+    ],
+    "failDays": 2
+  },
+  "settings": {
+    "dailyGoal": 30,
+    "sessionSize": 12
+  },
+  "lessons": [
+    {
+      "id": "hello",
+      "title": "Приветствия",
+      "theory": {
+        "title": "Приветствия",
+        "blocks": [
+          "**Hej** — универсальное «привет», а **Tack** — «спасибо».",
+          {
+            "type": "table",
+            "header": true,
+            "rows": [
+              [
+                "Швед.",
+                "Рус."
+              ],
+              [
+                "Hej",
+                "Привет"
+              ],
+              [
+                "Tack",
+                "Спасибо"
+              ]
+            ]
+          },
+          {
+            "type": "list",
+            "items": [
+              "**Ja** — да",
+              "**Nej** — нет"
+            ]
+          },
+          {
+            "type": "example",
+            "text": "Jag heter Anna",
+            "translation": "Меня зовут Анна"
+          },
+          {
+            "type": "note",
+            "text": "Hej читается как «хей»."
+          }
+        ]
+      },
+      "exercises": [
+        {
+          "id": "h1",
+          "type": "choice",
+          "question": "Как по-шведски «Привет»?",
+          "options": [
+            "Hej",
+            "Tack",
+            "Ja",
+            "Nej"
+          ],
+          "answer": "Hej"
+        },
+        {
+          "id": "h2",
+          "type": "choice",
+          "question": "Что значит «Tack»?",
+          "options": [
+            "Пожалуйста",
+            "Спасибо",
+            "Извините"
+          ],
+          "answer": 1,
+          "explanation": "Tack = спасибо"
+        },
+        {
+          "id": "h3",
+          "type": "input",
+          "question": "Переведите: «да»",
+          "answer": [
+            "ja"
+          ],
+          "hint": "две буквы"
+        },
+        {
+          "id": "h4",
+          "type": "order",
+          "question": "Соберите: «Меня зовут Анна»",
+          "answer": "Jag heter Anna",
+          "extra": [
+            "är"
+          ]
+        },
+        {
+          "id": "h5",
+          "type": "match",
+          "question": "Соедините пары",
+          "pairs": [
+            [
+              "Hej",
+              "Привет"
+            ],
+            [
+              "Tack",
+              "Спасибо"
+            ],
+            [
+              "Ja",
+              "Да"
+            ],
+            [
+              "Nej",
+              "Нет"
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "id": "food",
+      "title": "Еда",
+      "srs": {
+        "intervals": [
+          2,
+          5,
+          10
+        ],
+        "failDays": 1
+      },
+      "exercises": [
+        {
+          "id": "f1",
+          "type": "input",
+          "question": "Переведите: «вода»",
+          "answer": "vatten"
+        },
+        {
+          "id": "f2",
+          "type": "choice",
+          "question": "Что такое «Kaffe»?",
+          "options": [
+            "Чай",
+            "Кофе",
+            "Молоко"
+          ],
+          "answer": "Кофе"
+        },
+        {
+          "id": "f3",
+          "type": "order",
+          "question": "Соберите: «Я хочу кофе»",
+          "answer": "Jag vill ha kaffe",
+          "extra": [
+            "te"
+          ]
+        },
+        {
+          "id": "f4",
+          "type": "match",
+          "question": "Соедините пары",
+          "pairs": [
+            [
+              "bröd",
+              "хлеб"
+            ],
+            [
+              "mjölk",
+              "молоко"
+            ],
+            [
+              "äpple",
+              "яблоко"
+            ]
+          ]
+        }
+      ]
+    }
+  ]
+}

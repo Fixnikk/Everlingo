@@ -1,0 +1,9 @@
+{
+  "name": "json-lingvo",
+  "version": "1.0.0",
+  "description": "Duolingo-style learning platform: load any lesson from JSON, with optional spaced repetition",
+  "license": "MIT",
+  "private": true,
+  "scripts": { "test": "node tests/e2e.test.js" },
+  "devDependencies": { "jsdom": "^30.1.3" }
+}
